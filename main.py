@@ -11,52 +11,44 @@ from tensorflow.keras import layers
 from tensorflow.keras import models
 from tensorflow.keras import Sequential
 
-def dataProc(fpath, correction=0.2):
-    lines = []
+def datasetGen():
+    with open('simdata/driving_log.csv') as log_file:
+        log_reader = csv.DictReader(log_file)
+        X = []
+        y = []
+        steering_offset = 0.4
 
-    with open(fpath + '/driving_log.csv') as labels:
-        reader = csv.reader(labels)
+        for row in log_reader:
+            centerImage = mpimg.imread(row['center'].strip().replace('/home/era/Projects/Work/simdata', 'simdata'))
+            flippedCenterImage = np.fliplr(centerImage)
+            centerSteering = float(row['steering'])
 
-        for line in reader:
-            lines.append(line)
+            leftImage = mpimg.imread(row['left'].strip().replace('/home/era/Projects/Work/simdata', 'simdata'))
+            flippedLeftImage = np.fliplr(leftImage)
+            leftSteering = centerSteering + steering_offset
+
+            rightImage = mpimg.imread(row['right'].strip().replace('/home/era/Projects/Work/simdata', 'simdata'))
+            flippedRightImage = np.fliplr(rightImage)
+            rightSteering = centerSteering - steering_offset
+            
+            X.append(centerImage)
+            X.append(flippedCenterImage)
+            X.append(leftImage)
+            X.append(flippedLeftImage)
+            X.append(rightImage)
+            X.append(flippedRightImage)
+            
+            y.append(centerSteering)
+            y.append(-centerSteering)
+            y.append(leftSteering)
+            y.append(-leftSteering)
+            y.append(rightSteering)
+            y.append(-rightSteering)
+
+    X = np.array(X)
+    y = np.array(y)
     
-    dirs = [x[0] for x in os.walk(fpath)]
-    imgDirs = list(filter(lambda directory: os.path.isfile(directory + '/driving_log.csv'), dirs))
-
-    centerTotal = []
-    leftTotal = []
-    rightTotal = []
-    measurementTotal = []
-
-    for imgdir in imgDirs:
-        center = []
-        left = []
-        right = []
-        measurements = []
-
-        for line in lines:
-            measurements.append(float(line[3]))
-            center.append(imgdir + '/' + line[0].strip())
-            left.append(imgdir + '/' + line[1].strip())
-            right.append(imgdir + '/' + line[2].strip())
-
-        centerTotal.extend(center)
-        leftTotal.extend(left)
-        rightTotal.extend(right)
-        measurementTotal.extend(measurements)
-
-    imagePaths = []
-    measurements = []
-
-    imagePaths.extend(centerTotal)
-    imagePaths.extend(leftTotal)
-    imagePaths.extend(rightTotal)
-
-    measurements.extend(measurementTotal)
-    measurements.extend([x + correction for x in measurementTotal])
-    measurements.extend([x - correction for x in measurementTotal])
-
-    return (imagePaths, measurements)
+    return X, y
 
 def model():
     model = Sequential()
@@ -124,3 +116,15 @@ def model():
 
     return model
 
+X, y = datasetGen()
+X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.33, random_state=42) 
+
+model = model()
+model.summary()
+
+model.fit(X_train, y_train, 
+          epochs=8, 
+          batch_size=512,
+          validation_data=(X_valid, y_valid))
+
+model.save('model.h5')
