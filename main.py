@@ -53,12 +53,22 @@ def datasetGen():
 def model():
     model = Sequential()
 
-    model.add(layers.Conv2D(16, 
+    model.add(layers.Conv2D(8, 
                             kernel_size=(5, 5), 
                             strides=(2, 2), 
                             activation='relu', 
                             input_shape=(160, 320, 3), 
                             padding='same'))
+
+    model.add(layers.Conv2D(16, 
+                            kernel_size=(5, 5), 
+                            strides=(2, 2), 
+                            activation='relu', 
+                            padding='valid'))
+
+    model.add(layers.AveragePooling2D(pool_size=(2, 2), 
+                                      strides=(1, 1), 
+                                      padding='valid'))
 
     model.add(layers.Conv2D(32, 
                             kernel_size=(5, 5), 
@@ -66,17 +76,7 @@ def model():
                             activation='relu', 
                             padding='valid'))
 
-    model.add(layers.AveragePooling2D(pool_size=(2, 2), 
-                                      strides=(1, 1), 
-                                      padding='valid'))
-
-    model.add(layers.Conv2D(64, 
-                            kernel_size=(5, 5), 
-                            strides=(2, 2), 
-                            activation='relu', 
-                            padding='valid'))
-
-    model.add(layers.Conv2D(64, 
+    model.add(layers.Conv2D(32, 
                             kernel_size=(3, 3), 
                             strides=(2, 2), 
                             activation='relu', 
@@ -86,13 +86,13 @@ def model():
                                       strides=(1, 1), 
                                       padding='valid'))
 
-    model.add(layers.Conv2D(128, 
+    model.add(layers.Conv2D(64, 
                             kernel_size=(3, 3), 
                             strides=(1, 1), 
                             activation='relu', 
                             padding='valid'))
 
-    model.add(layers.Conv2D(128, 
+    model.add(layers.Conv2D(64, 
                             kernel_size=(3, 3), 
                             strides=(1, 1), 
                             activation='relu', 
@@ -102,7 +102,7 @@ def model():
 
     model.add(layers.Flatten())
 
-    model.add(layers.Dense(4096, activation='linear'))
+    model.add(layers.Dense(1024, activation='linear'))
 
     model.add(layers.Dense(512, activation='linear'))
 
